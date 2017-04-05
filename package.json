@@ -1,0 +1,19 @@
+{
+  "name": "rust-webgl2-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "cargo build --release --target=wasm32-unknown-emscripten",
+    "copy": "npm run copy:js && npm run copy::wasm",
+    "copy:js": "cp target/wasm32-unknown-emscripten/release/rust-webgl2-example.js public/rust-webgl2-example.js",
+    "copy:wasm": "cp target/wasm32-unknown-emscripten/release/deps/rust_webgl2_example-*.wasm public/rust-webgl2-example.wasm",
+    "deploy": "npm run build && npm run copy && gh-pages -d public"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "gh-pages": "^0.12.0"
+  }
+}

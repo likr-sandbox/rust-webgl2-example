@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title></title>
+</head>
+<body>
+<canvas width="500" height="500"/>
+<script>
+var Module = {
+  canvas: document.querySelector('canvas')
+}
+fetch('rust-webgl2-example.wasm')
+  .then((response) => response.arrayBuffer())
+  .then((buffer) => {
+    Module.wasmBinary = buffer
+    var script = document.createElement('script')
+    script.src = "rust-webgl2-example.js"
+    document.body.appendChild(script)
+  })
+</script>
+</body>
+</html>

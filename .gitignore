@@ -1,2 +1,6 @@
 target
 Cargo.lock
+node_modules
+npm-debug.log
+public/rust-webgl2-example.js
+public/rust-webgl2-example.wasm
