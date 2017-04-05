@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title></title>
+</head>
+<body>
+<canvas width="500" height="500"/>
+<script>
+var Module = {
+  canvas: document.querySelector('canvas')
+}
+</script>
+<script src="target/asmjs-unknown-emscripten/debug/rust-webgl2-example.js"></script>
+<!--<script>
+var Module = {
+  canvas: document.querySelector('canvas')
+}
+fetch('target/wasm32-unknown-emscripten/release/deps/hello_triangle-864658f028020f90.wasm')
+  .then((response) => response.arrayBuffer())
+  .then((buffer) => {
+    Module.wasmBinary = buffer
+    var script = document.createElement('script')
+    script.src = "target/wasm32-unknown-emscripten/release/hello_triangle.js"
+    document.body.appendChild(script)
+  })
+</script>-->
+</body>
+</html>
