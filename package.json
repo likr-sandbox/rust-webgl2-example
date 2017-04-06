@@ -8,12 +8,15 @@
     "copy": "npm run copy:js && npm run copy:wasm",
     "copy:js": "cp target/wasm32-unknown-emscripten/release/rust-webgl2-example.js public/rust-webgl2-example.js",
     "copy:wasm": "cp target/wasm32-unknown-emscripten/release/deps/rust_webgl2_example-*.wasm public/rust-webgl2-example.wasm",
-    "deploy": "npm run build && npm run copy && gh-pages -d public"
+    "deploy": "npm run prepare && gh-pages -d public",
+    "prepare": "npm run build && npm run copy",
+    "start":  "npm run prepare && http-server public"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "gh-pages": "^0.12.0"
+    "gh-pages": "^0.12.0",
+    "http-server": "^0.9.0"
   }
 }
