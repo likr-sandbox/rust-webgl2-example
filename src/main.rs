@@ -9,6 +9,7 @@ use emscripten_sys::{
     emscripten_webgl_init_context_attributes,
     emscripten_webgl_create_context,
     emscripten_webgl_make_context_current,
+    emscripten_get_element_css_size,
     EmscriptenWebGLContextAttributes,
 };
 
@@ -23,6 +24,8 @@ struct Context {
     theta: f32,
     mv_matrix: GlMatrix,
     p_matrix: GlMatrix,
+    width: u32,
+    height: u32,
 }
 
 fn load_shader(gl: &GlPtr, shader_type: GLenum, source: &[&[u8]]) -> Option<GLuint> {
@@ -222,19 +225,22 @@ impl Context {
         let buffer = init_buffer(&gl, program).unwrap();
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl::DEPTH_TEST);
+        let (width, height) = get_canvas_size();
         Context {
             gl: gl,
             program: program,
             buffer: buffer,
             theta: 0.0,
             mv_matrix: identity(),
-            p_matrix: perspective_matrix((45.0 as f32).to_radians(), 1.0, 0.001, 1000.0),
+            p_matrix: perspective_matrix((45.0 as f32).to_radians(), width as f32 / height as f32, 0.001, 1000.0),
+            width: width,
+            height: height,
         }
     }
 
     fn draw(&self) {
         let gl = &self.gl;
-        gl.viewport(0, 0, 500, 500);
+        gl.viewport(0, 0, self.width as i32, self.height as i32);
         gl.clear(gl::COLOR_BUFFER_BIT);
         gl.use_program(self.program);
         let mv_location = gl.get_uniform_location(self.program, "uMVMatrix");
@@ -247,7 +253,19 @@ impl Context {
     }
 }
 
+fn get_canvas_size() -> (u32, u32) {
+    unsafe {
+        let mut width = std::mem::uninitialized();
+        let mut height = std::mem::uninitialized();
+        emscripten_get_element_css_size(std::ptr::null(), &mut width, &mut height);
+        (width as u32, height as u32)
+    }
+}
+
 fn step(ctx: &mut Context) {
+    let (width, height) = get_canvas_size();
+    ctx.width = width;
+    ctx.height = height;
     let camera = viewing_matrix([0.0, 0.0, 200.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]);
     ctx.theta += 0.01;
     ctx.mv_matrix = matmul(matmul(rotate_x(ctx.theta), rotate_y(ctx.theta)), camera);
