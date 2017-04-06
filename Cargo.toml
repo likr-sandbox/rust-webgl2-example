@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["Yosuke ONOUE <onoue@likr-lab.com>"]
 
 [dependencies]
-gleam = "*"
-emscripten-sys = {git = 'https://github.com/likr/emscripten-sys'}
+gleam = "0.4"
+emscripten-sys = "0.3"
