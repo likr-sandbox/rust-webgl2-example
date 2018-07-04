@@ -50,19 +50,11 @@ pub fn cross(v1: Vec3, v2: Vec3) -> Vec3 {
 
 pub fn normalize(v: Vec3) -> Vec3 {
     let sum = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
-    [
-        v[0] / sum,
-        v[1] / sum,
-        v[2] / sum,
-    ]
+    [v[0] / sum, v[1] / sum, v[2] / sum]
 }
 
 pub fn viewing_matrix(eye: Vec3, up: Vec3, target: Vec3) -> Matrix44 {
-    let d = [
-        target[0] - eye[0],
-        target[1] - eye[1],
-        target[2] - eye[2],
-    ];
+    let d = [target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]];
     let r = cross(up, d);
     let f = cross(d, r);
     let d = normalize(d);
@@ -81,7 +73,14 @@ pub fn viewing_matrix(eye: Vec3, up: Vec3, target: Vec3) -> Matrix44 {
     matmul(translate(-eye[0], -eye[1], -eye[2]), matrix)
 }
 
-pub fn orthogonal_matrix(left: f32, right: f32, top: f32, bottom: f32, near: f32, far: f32) -> Matrix44 {
+pub fn orthogonal_matrix(
+    left: f32,
+    right: f32,
+    top: f32,
+    bottom: f32,
+    near: f32,
+    far: f32,
+) -> Matrix44 {
     let mut matrix = zeros();
     let w = right - left;
     let x = right + left;

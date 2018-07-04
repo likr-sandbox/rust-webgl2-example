@@ -5,4 +5,3 @@ authors = ["Yosuke ONOUE <onoue@likr-lab.com>"]
 
 [dependencies]
 gleam = "0.4"
-emscripten-sys = "0.3"

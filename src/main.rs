@@ -1,27 +1,16 @@
 extern crate gleam;
-extern crate emscripten_sys;
 
+mod emscripten;
 mod matrix;
 
+use emscripten::{
+    emscripten_GetProcAddress, emscripten_get_element_css_size, emscripten_set_main_loop_arg,
+    emscripten_webgl_create_context, emscripten_webgl_init_context_attributes,
+    emscripten_webgl_make_context_current, EmscriptenWebGLContextAttributes,
+};
 use gleam::gl;
 use gleam::gl::{GLenum, GLuint};
-use emscripten_sys::{
-    emscripten_set_main_loop_arg,
-    emscripten_GetProcAddress,
-    emscripten_webgl_init_context_attributes,
-    emscripten_webgl_create_context,
-    emscripten_webgl_make_context_current,
-    emscripten_get_element_css_size,
-    EmscriptenWebGLContextAttributes,
-};
-use matrix::{
-    rotate_x,
-    rotate_y,
-    viewing_matrix,
-    perspective_matrix,
-    matmul,
-    Matrix44,
-};
+use matrix::{matmul, perspective_matrix, rotate_x, rotate_y, viewing_matrix, Matrix44};
 
 type GlPtr = std::rc::Rc<gl::Gl>;
 
@@ -56,28 +45,14 @@ fn load_shader(gl: &GlPtr, shader_type: GLenum, source: &[&[u8]]) -> Option<GLui
 
 fn init_buffer(gl: &GlPtr, program: GLuint) -> Option<GLuint> {
     let vertices: Vec<f32> = vec![
-        -50.0, -50.0, -50.0, 0.0, 0.0, 0.0,
-        50.0, -50.0, -50.0, 1.0, 0.0, 0.0,
-        50.0, 50.0, -50.0, 1.0, 1.0, 0.0,
-        -50.0, 50.0, -50.0, 0.0, 1.0, 0.0,
-        -50.0, -50.0, 50.0, 0.0, 0.0, 1.0,
-        50.0, -50.0, 50.0, 1.0, 0.0, 1.0,
-        50.0, 50.0, 50.0, 1.0, 1.0, 1.0,
-        -50.0, 50.0, 50.0, 0.0, 1.0, 1.0,
+        -50.0, -50.0, -50.0, 0.0, 0.0, 0.0, 50.0, -50.0, -50.0, 1.0, 0.0, 0.0, 50.0, 50.0, -50.0,
+        1.0, 1.0, 0.0, -50.0, 50.0, -50.0, 0.0, 1.0, 0.0, -50.0, -50.0, 50.0, 0.0, 0.0, 1.0, 50.0,
+        -50.0, 50.0, 1.0, 0.0, 1.0, 50.0, 50.0, 50.0, 1.0, 1.0, 1.0, -50.0, 50.0, 50.0, 0.0, 1.0,
+        1.0,
     ];
     let elements: Vec<u16> = vec![
-        3, 2, 0,
-        2, 0, 1,
-        0, 1, 4,
-        1, 4, 5,
-        1, 2, 5,
-        2, 5, 6,
-        2, 3, 6,
-        3, 6, 7,
-        3, 0, 7,
-        0, 7, 4,
-        4, 5, 7,
-        5, 7, 6,
+        3, 2, 0, 2, 0, 1, 0, 1, 4, 1, 4, 5, 1, 2, 5, 2, 5, 6, 2, 3, 6, 3, 6, 7, 3, 0, 7, 0, 7, 4,
+        4, 5, 7, 5, 7, 6,
     ];
     let buffers = gl.gen_buffers(2);
     let vertex_buffer = buffers[0];
@@ -89,11 +64,21 @@ fn init_buffer(gl: &GlPtr, program: GLuint) -> Option<GLuint> {
     gl.enable_vertex_attrib_array(position_location);
     gl.enable_vertex_attrib_array(color_location);
     gl.bind_buffer(gl::ARRAY_BUFFER, vertex_buffer);
-    gl.buffer_data_untyped(gl::ARRAY_BUFFER, 4 * vertices.len() as isize, vertices.as_ptr() as *const _, gl::STATIC_DRAW);
+    gl.buffer_data_untyped(
+        gl::ARRAY_BUFFER,
+        4 * vertices.len() as isize,
+        vertices.as_ptr() as *const _,
+        gl::STATIC_DRAW,
+    );
     gl.vertex_attrib_pointer(position_location, 3, gl::FLOAT, false, 24, 0);
     gl.vertex_attrib_pointer(color_location, 3, gl::FLOAT, false, 24, 12);
     gl.bind_buffer(gl::ELEMENT_ARRAY_BUFFER, element_buffer);
-    gl.buffer_data_untyped(gl::ELEMENT_ARRAY_BUFFER, 2 * elements.len() as isize, elements.as_ptr() as *const _, gl::STATIC_DRAW);
+    gl.buffer_data_untyped(
+        gl::ELEMENT_ARRAY_BUFFER,
+        2 * elements.len() as isize,
+        elements.as_ptr() as *const _,
+        gl::STATIC_DRAW,
+    );
     gl.bind_vertex_array(0);
     Some(array)
 }
@@ -121,7 +106,12 @@ impl Context {
             buffer: buffer,
             theta: 0.0,
             camera: viewing_matrix([0.0, 0.0, 200.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]),
-            p_matrix: perspective_matrix((45.0 as f32).to_radians(), width as f32 / height as f32, 0.001, 1000.0),
+            p_matrix: perspective_matrix(
+                (45.0 as f32).to_radians(),
+                width as f32 / height as f32,
+                0.001,
+                1000.0,
+            ),
             width: width,
             height: height,
         }
@@ -133,7 +123,10 @@ impl Context {
         gl.clear(gl::COLOR_BUFFER_BIT);
         gl.use_program(self.program);
         let mv_location = gl.get_uniform_location(self.program, "uMVMatrix");
-        let mv_matrix = matmul(matmul(rotate_x(self.theta), rotate_y(self.theta)), self.camera);
+        let mv_matrix = matmul(
+            matmul(rotate_x(self.theta), rotate_y(self.theta)),
+            self.camera,
+        );
         gl.uniform_matrix_4fv(mv_location, false, &mv_matrix);
         let p_location = gl.get_uniform_location(self.program, "uPMatrix");
         gl.uniform_matrix_4fv(p_location, false, &self.p_matrix);
@@ -157,7 +150,7 @@ fn step(ctx: &mut Context) {
     ctx.draw();
 }
 
-extern fn loop_wrapper(ctx: *mut std::os::raw::c_void) {
+extern "C" fn loop_wrapper(ctx: *mut std::os::raw::c_void) {
     unsafe {
         let mut ctx = &mut *(ctx as *mut Context);
         step(&mut ctx);
