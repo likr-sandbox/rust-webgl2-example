@@ -33,8 +33,11 @@ fn load_shader(gl: &GlPtr, shader_type: GLenum, source: &[&[u8]]) -> Option<GLui
     }
     gl.shader_source(shader, source);
     gl.compile_shader(shader);
-    let compiled = gl.get_shader_iv(shader, gl::COMPILE_STATUS);
-    if compiled == 0 {
+    let mut compiled = [0];
+    unsafe {
+        gl.get_shader_iv(shader, gl::COMPILE_STATUS, &mut compiled);
+    }
+    if compiled[0] == 0 {
         let log = gl.get_shader_info_log(shader);
         println!("{}", log);
         gl.delete_shader(shader);
