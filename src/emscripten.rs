@@ -40,10 +40,6 @@ extern "C" {
         name: *const ::std::os::raw::c_char,
     ) -> *const ::std::os::raw::c_void;
 
-    pub fn emscripten_webgl_init_context_attributes(
-        attributes: *mut EmscriptenWebGLContextAttributes,
-    );
-
     pub fn emscripten_webgl_create_context(
         target: *const ::std::os::raw::c_char,
         attributes: *const EmscriptenWebGLContextAttributes,
