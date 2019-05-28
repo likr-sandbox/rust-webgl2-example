@@ -5,7 +5,8 @@ mod matrix;
 
 use emscripten::{
     emscripten_GetProcAddress, emscripten_get_element_css_size, emscripten_set_main_loop_arg,
-    emscripten_webgl_create_context, emscripten_webgl_make_context_current,
+    emscripten_webgl_create_context, emscripten_webgl_init_context_attributes,
+    emscripten_webgl_make_context_current, EmscriptenWebGLContextAttributes,
 };
 use gleam::gl;
 use gleam::gl::{GLenum, GLuint};
@@ -161,7 +162,10 @@ extern "C" fn loop_wrapper(ctx: *mut std::os::raw::c_void) {
 
 fn main() {
     unsafe {
-        let handle = emscripten_webgl_create_context(std::ptr::null(), std::ptr::null());
+        let mut attributes: EmscriptenWebGLContextAttributes = std::mem::uninitialized();
+        emscripten_webgl_init_context_attributes(&mut attributes);
+        attributes.majorVersion = 2;
+        let handle = emscripten_webgl_create_context(std::ptr::null(), &attributes);
         emscripten_webgl_make_context_current(handle);
         let gl = gl::GlesFns::load_with(|addr| {
             let addr = std::ffi::CString::new(addr).unwrap();
