@@ -2,7 +2,7 @@
 
 Rust + WebAssembly + WebGL 2.0 Demo
 
-Demo: https://likr.github.io/rust-webgl2-example
+Demo: https://likr-sandbox.github.io/rust-webgl2-example
 
 # How to build and run
 
